@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:stateapp/state/app_state.dart';
@@ -63,6 +65,29 @@ class _MyHomePageState extends State<MyHomePage> {
     // setState(() {
     //   isLoading = false;
     // });
+  }
+
+  StreamSubscription sub;
+  @override
+  void initState() {
+    sub = this
+        .appState
+        .vehicleState
+        .searchText
+        .cubeStream$
+        .debounceTime(Duration(milliseconds: 800))
+        .listen((event) {
+      print("Search Keyword:$event");
+      this.appState.vehicleState.searchVehicles();
+    });
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    sub.cancel();
+    super.dispose();
   }
 
   @override

@@ -13,4 +13,10 @@ class VehicleListState {
       throw err;
     }
   }
+
+  void searchVehicles() {
+    print("searching vehicles...");
+    //get data from http api
+    //set data to states
+  }
 }
