@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:get_it/get_it.dart';
+import 'package:stateapp/state/app_state.dart';
+import 'package:stateapp/statefull.w1.dart';
 import 'package:stateapp/stateless.w1.dart';
+import 'package:stateapp/stateless.w2.dart';
+import 'package:rxdart/rxdart.dart';
+
+GetIt getIt = GetIt.instance;
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  getIt.registerSingleton<AppState>(AppState());
+
   runApp(MyApp());
 }
 
@@ -31,24 +40,29 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  BehaviorSubject<String> _cubeStream = BehaviorSubject<String>.seeded("-");
+  AppState appState = getIt.get<AppState>();
 
   int _counter = 0;
-
-  @override
-  void dispose() {
-    if (_cubeStream != null) {
-      _cubeStream.close();
-    }
-    super.dispose();
+  void _incrementCounter() {
+    _counter++;
+    appState.cubeStream.add("$_counter");
   }
 
-  void _incrementCounter() {
+  var isLoading = false;
+  void _incrementCounter2() async {
+    appState.state2.setNext(appState.state2.value + 1);
+
     // setState(() {
-    //
+    //   isLoading = true;
     // });
-    _counter++;
-    _cubeStream.add("$_counter");
+    // try {
+    //   await appState.vehicleState.getList();
+    // } catch (err) {
+    //   // snack bar ...
+    // }
+    // setState(() {
+    //   isLoading = false;
+    // });
   }
 
   @override
@@ -56,33 +70,38 @@ class _MyHomePageState extends State<MyHomePage> {
     print("build  home widget");
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: StreamBuilder(
+          stream: appState.vehicleState.searchText.cubeStream$
+              .debounceTime(Duration(milliseconds: 600)),
+          builder: (BuildContext context, _) {
+            return Text(appState.vehicleState.searchText.value);
+          },
+        ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            StateLessWidget1(text: 'w1:$_counter'),
-            StreamBuilder(
-              stream: _cubeStream,
-              builder: (BuildContext context, _) {
-                return StateLessWidget1(
-                    text: 'in stream build stateless:$_counter');
-              },
-            ),
-            StateLessWidget1(
-              text: "$_counter",
-            )
+            StateLessWidget1(),
+            StateLessWidget2(),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FloatingActionButton(
+            onPressed: _incrementCounter,
+            tooltip: 'Increment',
+            child: Icon(Icons.add),
+          ),
+          SizedBox(width: 50),
+          FloatingActionButton(
+            onPressed: _incrementCounter2,
+            tooltip: 'Increment2',
+            child: Icon(Icons.card_travel),
+          ),
+        ],
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
